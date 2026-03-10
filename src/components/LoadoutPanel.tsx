@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { Project } from '@/types/project';
+import { generateLoadout } from '@/lib/promptGenerator';
 
 const STAGES: Record<number, string> = {
     1: 'Architect',
@@ -10,16 +12,10 @@ const STAGES: Record<number, string> = {
     7: 'Closer',
 };
 
-export default function LoadoutPanel({
-    current_stage,
-    current_chapter,
-}: {
-    current_stage: number;
-    current_chapter: number | null;
-}) {
+export default function LoadoutPanel({ project }: { project: Project }) {
     const [copied, setCopied] = useState(false);
-    const stageName = STAGES[current_stage] || 'Unknown';
-    const loadoutText = `[Stage ${stageName} prompt${current_chapter ? ` — Chapter ${current_chapter}` : ''} — will appear here in Phase 2]`;
+    const stageName = STAGES[project.current_stage] || 'Unknown';
+    const loadoutText = generateLoadout(project.current_stage, project);
 
     function handleCopy() {
         navigator.clipboard.writeText(loadoutText);

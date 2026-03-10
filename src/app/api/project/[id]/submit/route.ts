@@ -71,6 +71,10 @@ export async function POST(
         }
 
         if (project.current_stage === 6) {
+            project.manuscript = project.chapters
+                .map(c => `Chapter ${c.number}\n\n${c.sharp || c.draft || ''}`)
+                .join('\n\n---\n\n');
+
             // Auto-advance
             project.current_stage = 7;
         }

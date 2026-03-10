@@ -38,7 +38,7 @@ export default function PipelineClient({ initialProject }: { initialProject: Pro
                 </div>
                 <div className="flex-1 flex flex-col border-r border-zinc-800">
                     <div className="flex-1 border-b border-zinc-800 overflow-y-auto">
-                        <LoadoutPanel current_stage={project.current_stage} current_chapter={project.current_chapter} />
+                        <LoadoutPanel project={project} />
                     </div>
                     <div className="flex-1 overflow-y-auto">
                         <LoadinPanel current_stage={project.current_stage} onSubmit={handleLoadinSubmit} />

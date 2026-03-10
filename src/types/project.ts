@@ -25,4 +25,5 @@ export type Project = {
     foundation: string | null;
     outline: string | null;
     chapters: Chapter[];
+    manuscript?: string;
 };
