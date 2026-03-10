@@ -5,19 +5,28 @@ export default function LoadinPanel({
     onSubmit,
 }: {
     current_stage: number;
-    onSubmit: (text: string) => void;
+    onSubmit: (text: string) => Promise<boolean>;
 }) {
     const [text, setText] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    function handleSubmit() {
+    async function handleSubmit() {
         if (!text.trim() && current_stage !== 5) return;
-        onSubmit(text);
-        setText('');
+        setIsSubmitting(true);
+        const success = await onSubmit(text);
+        setIsSubmitting(false);
+        if (success) {
+            setText('');
+        }
     }
 
-    function handleSkip() {
-        onSubmit('');
-        setText('');
+    async function handleSkip() {
+        setIsSubmitting(true);
+        const success = await onSubmit('');
+        setIsSubmitting(false);
+        if (success) {
+            setText('');
+        }
     }
 
     return (
@@ -26,23 +35,25 @@ export default function LoadinPanel({
             <textarea
                 value={text}
                 onChange={(e) => setText(e.target.value)}
+                disabled={isSubmitting}
                 placeholder="Paste Claude's output here..."
-                className="flex-1 bg-transparent border border-zinc-800 p-4 focus:outline-none focus:border-zinc-500 transition-colors resize-none font-mono text-zinc-300 mb-4"
+                className="flex-1 bg-transparent border border-zinc-800 p-4 focus:outline-none focus:border-zinc-500 transition-colors resize-none font-mono text-zinc-300 mb-4 disabled:opacity-50"
             />
             <div className="flex gap-4">
                 <button
                     onClick={handleSubmit}
-                    disabled={!text.trim() && current_stage !== 5}
+                    disabled={(!text.trim() && current_stage !== 5) || isSubmitting}
                     className="flex-1 px-4 py-3 bg-amber-500 text-zinc-950 hover:bg-amber-400 disabled:opacity-50 disabled:bg-zinc-800 disabled:text-zinc-500 transition-colors text-sm uppercase tracking-widest font-bold"
                 >
-                    Submit
+                    {isSubmitting ? 'Submitting...' : 'Submit'}
                 </button>
                 {current_stage === 5 && (
                     <button
                         onClick={handleSkip}
-                        className="px-6 py-3 border border-zinc-700 hover:bg-zinc-800 transition-colors text-sm uppercase tracking-widest"
+                        disabled={isSubmitting}
+                        className="px-6 py-3 border border-zinc-700 hover:bg-zinc-800 transition-colors text-sm uppercase tracking-widest disabled:opacity-50"
                     >
-                        Skip (Reader only)
+                        {isSubmitting ? 'Skipping...' : 'Skip (Reader only)'}
                     </button>
                 )}
             </div>

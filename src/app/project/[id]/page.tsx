@@ -1,6 +1,8 @@
 import { getProject } from '@/lib/projectStore';
 import PipelineClient from './PipelineClient';
 
+export const dynamic = 'force-dynamic';
+
 export default async function ProjectPage({
     params,
 }: {

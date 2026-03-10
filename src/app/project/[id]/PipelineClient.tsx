@@ -11,7 +11,7 @@ import ManuscriptViewer from '@/components/ManuscriptViewer';
 export default function PipelineClient({ initialProject }: { initialProject: Project }) {
     const [project, setProject] = useState<Project>(initialProject);
 
-    async function handleLoadinSubmit(text: string) {
+    async function handleLoadinSubmit(text: string): Promise<boolean> {
         try {
             const res = await fetch(`/api/project/${project.id}/submit`, {
                 method: 'POST',
@@ -21,11 +21,16 @@ export default function PipelineClient({ initialProject }: { initialProject: Pro
             if (res.ok) {
                 const updatedProject = await res.json();
                 setProject(updatedProject);
+                return true;
             } else {
                 console.error('Submit failed', await res.text());
+                alert('Submit failed. Please try again or check the console for details.');
+                return false;
             }
         } catch (err) {
             console.error('Submit error:', err);
+            alert('A network error occurred. Please try again.');
+            return false;
         }
     }
 
