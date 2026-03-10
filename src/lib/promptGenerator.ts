@@ -1,12 +1,32 @@
 import { Project } from '@/types/project';
 
 function buildProjectHeader(project: Project): string {
+    const lengthDisplay = project.config.length_target === 'custom'
+        ? project.config.length_target_custom || 'custom length'
+        : {
+            short_story:  'Short Story (~5k words)',
+            story:        'Story (~7k words)',
+            novella:      'Novella (~10k words)',
+            novella_plus: 'Novella+ (~20k words)',
+        }[project.config.length_target] ?? project.config.length_target;
+
     return `PROJECT CONTEXT
 Title: ${project.config.title}
 Genre: ${project.config.genre}
 Tone: ${project.config.tone}
-Length target: ${project.config.length_target}
+Length target: ${lengthDisplay}
 Logline: ${project.config.logline}`;
+}
+
+function getChapterCountGuidance(project: Project): string {
+    switch (project.config.length_target) {
+        case 'short_story':  return '3-5 chapters';
+        case 'story':        return '5-7 chapters';
+        case 'novella':      return '7-10 chapters';
+        case 'novella_plus': return '12-16 chapters';
+        case 'custom':       return `an appropriate number of chapters for ${project.config.length_target_custom || 'the target length'}`;
+        default:             return '7-10 chapters';
+    }
 }
 
 function stage1Prompt(project: Project): string {
@@ -43,10 +63,7 @@ Do not add any preamble, sign-off, or meta-commentary. Respond with the five sec
 }
 
 function stage2Prompt(project: Project): string {
-    let chapterCount: string | number = 10;
-    if (project.config.length_target === 'short_story') chapterCount = '5-8';
-    else if (project.config.length_target === 'novella') chapterCount = '10-14';
-    else if (project.config.length_target === 'novel') chapterCount = '16-24';
+    const chapterGuidance = getChapterCountGuidance(project);
 
     return `You are outlining a ${project.config.genre} story.
 
@@ -55,7 +72,7 @@ ${buildProjectHeader(project)}
 FOUNDATION
 ${project.foundation || ''}
 
-Your task is to produce a full chapter-by-chapter outline. Target ${chapterCount} chapters for a ${project.config.length_target}.
+Your task is to produce a full chapter-by-chapter outline. Target ${chapterGuidance}.
 
 For each chapter provide:
 - Chapter number and title
@@ -78,7 +95,6 @@ Do not add any preamble or sign-off. Respond with the chapter outline only.`;
 function stage3Prompt(project: Project): string {
     const current_chapter = project.current_chapter || 1;
 
-    // Extract current chapter section from outline text
     const outline = project.outline || '';
     let chapterSection = '';
     const chapterRegex = new RegExp(`Chapter ${current_chapter}\\b`, 'i');
@@ -94,7 +110,6 @@ function stage3Prompt(project: Project): string {
         chapterSection = `(Could not extract Chapter ${current_chapter} section from outline)`;
     }
 
-    // Continuity anchor: last 3 sentences of previous chapter
     let previousChapterBlock = '';
     if (current_chapter > 1 && project.chapters.length >= current_chapter - 1) {
         const prevChapter = project.chapters[current_chapter - 2];
@@ -108,12 +123,11 @@ function stage3Prompt(project: Project): string {
         }
     }
 
-    // Reader response from previous chapter — inject as creative signal, not instruction
     let readerBlock = '';
     if (current_chapter > 1 && project.chapters.length >= current_chapter - 1) {
         const prevReader = project.chapters[current_chapter - 2].reader;
         if (prevReader) {
-            readerBlock = `\nREADER RESPONSE TO CHAPTER ${current_chapter - 1} (for context — what a reader felt and wanted after the last chapter):\n${prevReader}\nWrite Chapter ${current_chapter} knowing this is where the reader's head is. You may satisfy, subvert, or complicate those expectations — but be aware of them.\n`;
+            readerBlock = `\nREADER RESPONSE TO CHAPTER ${current_chapter - 1} (what a reader felt and wanted after the last chapter):\n${prevReader}\nWrite Chapter ${current_chapter} knowing this is where the reader's head is. You may satisfy, subvert, or complicate those expectations — but be aware of them.\n`;
         }
     }
 
@@ -238,7 +252,7 @@ export function generateLoadout(stage: number, project: Project): string {
         case 3: return stage3Prompt(project);
         case 4: return stage4Prompt(project);
         case 5: return stage5Prompt(project);
-        case 6: return ''; // Assembler: auto-advance, no prompt needed
+        case 6: return '';
         case 7: return stage7Prompt(project);
         default: return '';
     }

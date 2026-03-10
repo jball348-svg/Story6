@@ -1,9 +1,12 @@
+export type LengthTarget = 'short_story' | 'story' | 'novella' | 'novella_plus' | 'custom';
+
 export type ProjectConfig = {
     title: string;
-    genre: string;
+    genre: string;                    // free string — custom genre supported
     logline: string;
     tone: string;
-    length_target: 'short_story' | 'novella' | 'novel';
+    length_target: LengthTarget;
+    length_target_custom?: string;    // only set when length_target === 'custom', e.g. "15000 words"
 };
 
 export type ChapterStatus = 'not_started' | 'draft' | 'sharp' | 'complete';

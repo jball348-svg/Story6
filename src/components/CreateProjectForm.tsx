@@ -2,22 +2,50 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { LengthTarget } from '@/types/project';
+
+const LENGTH_OPTIONS: { value: LengthTarget; label: string; sub: string }[] = [
+    { value: 'short_story', label: 'Short Story', sub: '~5k words' },
+    { value: 'story',       label: 'Story',       sub: '~7k words' },
+    { value: 'novella',     label: 'Novella',     sub: '~10k words' },
+    { value: 'novella_plus',label: 'Novella+',    sub: '~20k words' },
+    { value: 'custom',      label: 'Custom',      sub: 'you decide' },
+];
+
+const GENRE_PRESETS = [
+    'Literary Fiction',
+    'Thriller',
+    'Horror',
+    'Romance',
+    'Sci-Fi',
+    'Fantasy',
+    'Mystery',
+    'Historical Fiction',
+    'Custom',
+];
 
 export default function CreateProjectForm() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
+    const [genre, setGenre] = useState('Literary Fiction');
+    const [customGenre, setCustomGenre] = useState('');
+    const [lengthTarget, setLengthTarget] = useState<LengthTarget>('short_story');
+    const [customLength, setCustomLength] = useState('');
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         setLoading(true);
 
         const formData = new FormData(e.currentTarget);
+        const resolvedGenre = genre === 'Custom' ? customGenre.trim() : genre;
+
         const config = {
-            title: formData.get('title'),
-            genre: formData.get('genre'),
-            logline: formData.get('logline'),
-            tone: formData.get('tone'),
-            length_target: formData.get('length_target'),
+            title: formData.get('title') as string,
+            genre: resolvedGenre || 'Custom',
+            logline: formData.get('logline') as string,
+            tone: formData.get('tone') as string,
+            length_target: lengthTarget,
+            ...(lengthTarget === 'custom' && { length_target_custom: customLength.trim() }),
         };
 
         try {
@@ -41,6 +69,8 @@ export default function CreateProjectForm() {
 
     return (
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+
+            {/* Title */}
             <div className="flex flex-col gap-2">
                 <label htmlFor="title" className="text-sm uppercase tracking-wider text-zinc-400">Title</label>
                 <input
@@ -52,24 +82,32 @@ export default function CreateProjectForm() {
                 />
             </div>
 
+            {/* Genre */}
             <div className="flex flex-col gap-2">
                 <label htmlFor="genre" className="text-sm uppercase tracking-wider text-zinc-400">Genre</label>
                 <select
                     id="genre"
-                    name="genre"
-                    required
+                    value={genre}
+                    onChange={e => setGenre(e.target.value)}
                     className="bg-zinc-950 border border-zinc-700 p-3 focus:outline-none focus:border-zinc-300 transition-colors rounded-none appearance-none"
                 >
-                    <option value="Literary Fiction">Literary Fiction</option>
-                    <option value="Thriller">Thriller</option>
-                    <option value="Horror">Horror</option>
-                    <option value="Romance">Romance</option>
-                    <option value="Sci-Fi">Sci-Fi</option>
-                    <option value="Fantasy">Fantasy</option>
-                    <option value="Custom">Custom</option>
+                    {GENRE_PRESETS.map(g => (
+                        <option key={g} value={g}>{g}</option>
+                    ))}
                 </select>
+                {genre === 'Custom' && (
+                    <input
+                        type="text"
+                        required
+                        placeholder="Enter your genre..."
+                        value={customGenre}
+                        onChange={e => setCustomGenre(e.target.value)}
+                        className="bg-transparent border border-zinc-700 border-t-0 p-3 focus:outline-none focus:border-zinc-300 transition-colors rounded-none"
+                    />
+                )}
             </div>
 
+            {/* Logline */}
             <div className="flex flex-col gap-2">
                 <label htmlFor="logline" className="text-sm uppercase tracking-wider text-zinc-400">Logline</label>
                 <textarea
@@ -82,6 +120,7 @@ export default function CreateProjectForm() {
                 />
             </div>
 
+            {/* Tone */}
             <div className="flex flex-col gap-2">
                 <label htmlFor="tone" className="text-sm uppercase tracking-wider text-zinc-400">Tone</label>
                 <input
@@ -93,27 +132,40 @@ export default function CreateProjectForm() {
                 />
             </div>
 
+            {/* Length Target */}
             <div className="flex flex-col gap-3">
                 <label className="text-sm uppercase tracking-wider text-zinc-400">Length Target</label>
-                <div className="flex gap-6">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="length_target" value="short_story" defaultChecked className="accent-zinc-50" />
-                        <span>Short Story (~10k)</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="length_target" value="novella" className="accent-zinc-50" />
-                        <span>Novella (~30k)</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="length_target" value="novel" className="accent-zinc-50" />
-                        <span>Novel (~80k)</span>
-                    </label>
+                <div className="flex flex-col gap-2">
+                    {LENGTH_OPTIONS.map(opt => (
+                        <label key={opt.value} className="flex items-center gap-3 cursor-pointer group">
+                            <input
+                                type="radio"
+                                name="length_target"
+                                value={opt.value}
+                                checked={lengthTarget === opt.value}
+                                onChange={() => setLengthTarget(opt.value)}
+                                className="accent-amber-500"
+                            />
+                            <span className="text-zinc-200">{opt.label}</span>
+                            <span className="text-zinc-500 text-sm">{opt.sub}</span>
+                        </label>
+                    ))}
                 </div>
+                {lengthTarget === 'custom' && (
+                    <input
+                        type="text"
+                        required
+                        placeholder="e.g. 12000 words, or 8 chapters"
+                        value={customLength}
+                        onChange={e => setCustomLength(e.target.value)}
+                        className="bg-transparent border border-zinc-700 p-3 focus:outline-none focus:border-zinc-300 transition-colors rounded-none mt-1"
+                    />
+                )}
             </div>
 
             <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || (genre === 'Custom' && !customGenre.trim()) || (lengthTarget === 'custom' && !customLength.trim())}
                 className="mt-4 px-6 py-4 border border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-zinc-950 transition-colors uppercase tracking-widest text-sm disabled:opacity-50 disabled:cursor-not-allowed font-bold"
             >
                 {loading ? 'Creating...' : 'Create Project'}
