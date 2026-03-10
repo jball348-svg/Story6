@@ -44,9 +44,9 @@ Do not add any preamble, sign-off, or meta-commentary. Respond with the five sec
 
 function stage2Prompt(project: Project): string {
     let chapterCount: string | number = 10;
-    if (project.config.length_target === 'short_story') chapterCount = "5-8";
-    else if (project.config.length_target === 'novella') chapterCount = "10-14";
-    else if (project.config.length_target === 'novel') chapterCount = "16-24";
+    if (project.config.length_target === 'short_story') chapterCount = '5-8';
+    else if (project.config.length_target === 'novella') chapterCount = '10-14';
+    else if (project.config.length_target === 'novel') chapterCount = '16-24';
 
     return `You are outlining a ${project.config.genre} story.
 
@@ -81,40 +81,41 @@ function stage3Prompt(project: Project): string {
     // Extract current chapter section from outline text
     const outline = project.outline || '';
     let chapterSection = '';
-
     const chapterRegex = new RegExp(`Chapter ${current_chapter}\\b`, 'i');
     const nextChapterRegex = new RegExp(`Chapter ${current_chapter + 1}\\b`, 'i');
-
     const startIdx = outline.search(chapterRegex);
     if (startIdx !== -1) {
         const remaining = outline.slice(startIdx);
         const nextIdx = remaining.search(nextChapterRegex);
-        if (nextIdx !== -1) {
-            chapterSection = remaining.slice(0, nextIdx).trim();
-        } else {
-            chapterSection = remaining.trim();
-        }
+        chapterSection = nextIdx !== -1
+            ? remaining.slice(0, nextIdx).trim()
+            : remaining.trim();
     } else {
         chapterSection = `(Could not extract Chapter ${current_chapter} section from outline)`;
     }
 
-    let previousChapterTail = '';
+    // Continuity anchor: last 3 sentences of previous chapter
+    let previousChapterBlock = '';
     if (current_chapter > 1 && project.chapters.length >= current_chapter - 1) {
         const prevChapter = project.chapters[current_chapter - 2];
         const content = prevChapter.sharp || prevChapter.draft || '';
         if (content) {
             const sentences = content.match(/[^.!?]+[.!?]+/g) || [];
-            if (sentences.length <= 3) {
-                previousChapterTail = content;
-            } else {
-                previousChapterTail = sentences.slice(-3).join(' ').trim();
-            }
+            const tail = sentences.length <= 3
+                ? content
+                : sentences.slice(-3).join(' ').trim();
+            previousChapterBlock = `\nCONTINUITY — final lines of Chapter ${current_chapter - 1}:\n${tail}\n`;
         }
     }
 
-    const previousChapterBlock = current_chapter > 1
-        ? `\nCONTINUITY — final lines of Chapter ${current_chapter - 1}:\n${previousChapterTail}\n`
-        : '';
+    // Reader response from previous chapter — inject as creative signal, not instruction
+    let readerBlock = '';
+    if (current_chapter > 1 && project.chapters.length >= current_chapter - 1) {
+        const prevReader = project.chapters[current_chapter - 2].reader;
+        if (prevReader) {
+            readerBlock = `\nREADER RESPONSE TO CHAPTER ${current_chapter - 1} (for context — what a reader felt and wanted after the last chapter):\n${prevReader}\nWrite Chapter ${current_chapter} knowing this is where the reader's head is. You may satisfy, subvert, or complicate those expectations — but be aware of them.\n`;
+        }
+    }
 
     return `You are writing Chapter ${current_chapter} of a ${project.config.genre} story.
 
@@ -128,7 +129,7 @@ ${project.outline || ''}
 
 YOUR CHAPTER
 ${chapterSection}
-${previousChapterBlock}
+${previousChapterBlock}${readerBlock}
 Write Chapter ${current_chapter} in full. Target 1,500-2,500 words.
 
 Guidelines:
@@ -197,7 +198,6 @@ Tell me:
 function stage7Prompt(project: Project): string {
     const firstChapter = project.chapters[0];
     const firstChapterContent = firstChapter?.sharp || firstChapter?.draft || '';
-
     const finalChapter = project.chapters[project.chapters.length - 1];
     const finalChapterContent = finalChapter?.sharp || finalChapter?.draft || '';
 
@@ -238,7 +238,7 @@ export function generateLoadout(stage: number, project: Project): string {
         case 3: return stage3Prompt(project);
         case 4: return stage4Prompt(project);
         case 5: return stage5Prompt(project);
-        case 6: return ''; // Assembler: auto-advance
+        case 6: return ''; // Assembler: auto-advance, no prompt needed
         case 7: return stage7Prompt(project);
         default: return '';
     }
