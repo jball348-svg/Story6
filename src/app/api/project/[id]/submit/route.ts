@@ -40,12 +40,12 @@ function countChaptersInOutline(outline: string): number {
  */
 function defaultChapterCount(length_target: LengthTarget): number {
     switch (length_target) {
-        case 'short_story':  return 4;
-        case 'story':        return 6;
-        case 'novella':      return 8;
+        case 'short_story': return 4;
+        case 'story': return 6;
+        case 'novella': return 8;
         case 'novella_plus': return 14;
-        case 'custom':       return 8;
-        default:             return 8;
+        case 'custom': return 8;
+        default: return 8;
     }
 }
 
@@ -115,6 +115,14 @@ export async function POST(
                     project.current_chapter = null;
                 }
             }
+        } else if (current_stage === 7) {
+            project.closer_output = loadin_text;
+            project.current_stage = 8;
+        } else if (current_stage === 8) {
+            if (loadin_text.trim()) {
+                project.chosen_title = loadin_text.trim();
+            }
+            project.current_stage = 9;
         }
 
         // Stage 6: Assembler — auto-advance, build manuscript string

@@ -29,4 +29,6 @@ export type Project = {
     outline: string | null;
     chapters: Chapter[];
     manuscript?: string;
+    closer_output?: string;
+    chosen_title?: string;
 };

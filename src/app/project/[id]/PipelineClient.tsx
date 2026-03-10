@@ -1,14 +1,17 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Project } from '@/types/project';
 import TopBar from '@/components/TopBar';
 import StageList from '@/components/StageList';
 import LoadoutPanel from '@/components/LoadoutPanel';
 import LoadinPanel from '@/components/LoadinPanel';
 import ManuscriptViewer from '@/components/ManuscriptViewer';
+import TitlePicker from '@/components/TitlePicker';
 
 export default function PipelineClient({ initialProject }: { initialProject: Project }) {
+    const router = useRouter();
     const [project, setProject] = useState<Project>(initialProject);
 
     async function handleLoadinSubmit(text: string): Promise<boolean> {
@@ -32,6 +35,24 @@ export default function PipelineClient({ initialProject }: { initialProject: Pro
             alert('A network error occurred. Please try again.');
             return false;
         }
+    }
+
+    async function handleTitleSelected(title: string) {
+        const success = await handleLoadinSubmit(title);
+        if (success) {
+            router.push(`/project/${project.id}/read`);
+        }
+    }
+
+    if (project.current_stage === 8) {
+        return (
+            <div className="flex flex-col h-screen bg-zinc-950 text-zinc-50 font-mono">
+                <TopBar project={project} />
+                <div className="flex flex-1 overflow-hidden">
+                    <TitlePicker project={project} onTitleSelected={handleTitleSelected} />
+                </div>
+            </div>
+        );
     }
 
     return (

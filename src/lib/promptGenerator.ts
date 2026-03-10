@@ -4,9 +4,9 @@ function buildProjectHeader(project: Project): string {
     const lengthDisplay = project.config.length_target === 'custom'
         ? project.config.length_target_custom || 'custom length'
         : {
-            short_story:  'Short Story (~5k words)',
-            story:        'Story (~7k words)',
-            novella:      'Novella (~10k words)',
+            short_story: 'Short Story (~5k words)',
+            story: 'Story (~7k words)',
+            novella: 'Novella (~10k words)',
             novella_plus: 'Novella+ (~20k words)',
         }[project.config.length_target] ?? project.config.length_target;
 
@@ -20,12 +20,12 @@ Logline: ${project.config.logline}`;
 
 function getChapterCountGuidance(project: Project): string {
     switch (project.config.length_target) {
-        case 'short_story':  return '3-5 chapters';
-        case 'story':        return '5-7 chapters';
-        case 'novella':      return '7-10 chapters';
+        case 'short_story': return '3-5 chapters';
+        case 'story': return '5-7 chapters';
+        case 'novella': return '7-10 chapters';
         case 'novella_plus': return '12-16 chapters';
-        case 'custom':       return `an appropriate number of chapters for ${project.config.length_target_custom || 'the target length'}`;
-        default:             return '7-10 chapters';
+        case 'custom': return `an appropriate number of chapters for ${project.config.length_target_custom || 'the target length'}`;
+        default: return '7-10 chapters';
     }
 }
 
@@ -92,6 +92,14 @@ The outline as a whole must include:
 Do not add any preamble or sign-off. Respond with the chapter outline only.`;
 }
 
+function stripNarrativeFunction(text: string): string {
+    return text
+        .split('\n')
+        .filter(line => !/^\s*narrative function/i.test(line))
+        .join('\n')
+        .trim();
+}
+
 function stage3Prompt(project: Project): string {
     const current_chapter = project.current_chapter || 1;
 
@@ -104,8 +112,8 @@ function stage3Prompt(project: Project): string {
         const remaining = outline.slice(startIdx);
         const nextIdx = remaining.search(nextChapterRegex);
         chapterSection = nextIdx !== -1
-            ? remaining.slice(0, nextIdx).trim()
-            : remaining.trim();
+            ? stripNarrativeFunction(remaining.slice(0, nextIdx))
+            : stripNarrativeFunction(remaining);
     } else {
         chapterSection = `(Could not extract Chapter ${current_chapter} section from outline)`;
     }
