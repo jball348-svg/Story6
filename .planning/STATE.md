@@ -5,42 +5,36 @@ _Last updated: 2026-03-10_
 ## Current Position
 
 - **Milestone**: 1 — Story6 MVP
-- **Phase**: 2 — Prompt System
-- **Status**: Plan-phase complete. Ready to execute.
+- **Phase**: 3 — Quality Pass
+- **Status**: In progress — requires real story run-through
 
 ## Completed Phases
 
 - ✅ Phase 1 — Shell + Pipeline UI (verified 2026-03-10)
-  - All 7 pipeline stages wired
-  - Three-panel UI: StageList, LoadoutPanel, LoadinPanel, ManuscriptViewer, TopBar
-  - projectStore.ts: flat JSON state, no DB
-  - Stage advancement logic correct, chapter loop correct
-  - projects/ gitignored
-  - Note: Stage 6 Assembler skips building manuscript string — to fix in Phase 2
+- ✅ Phase 2 — Prompt System (verified 2026-03-10)
+  - All 6 stage prompts live
+  - DIAGNOSIS stripped from chapter.sharp
+  - Reader response feeds into next chapter Writer prompt
+  - Length options expanded (5 tiers + custom)
+  - Custom genre supported
+  - Chapter count parsing made robust
 
 ## Key Decisions (Locked)
 
-- No LLM API calls — the tool generates prompts, user runs them in Claude, pastes output back
+- No LLM API calls — copy/paste conveyor mechanic
 - Stack: Next.js App Router, TypeScript, Tailwind CSS
-- State: flat `project.json` per project (no database, no ORM)
-- User is always in the loop — copy/paste conveyor mechanic
-- Genre/style configurable per project via setup form
-- Prompts inject full project.json context every time — the V4 fix
+- State: flat `project.json` per project
+- Prompts inject full project context every time
+- Quality of prose is the goal — not detection evasion
 
 ## Active Blockers
 
 - None
 
-## Captured Ideas (for later / Milestone 2)
+## Captured Ideas (Milestone 2)
 
 - Export to .docx
-- Multiple projects support with project list screen
-- Stage notes — user can annotate any stage with direction for Claude
+- Multiple projects / project list screen
+- Stage notes — user can annotate any stage with direction
 - Genre presets that pre-fill the config form
-- Reader response stage (Stage 5) toggle on/off per chapter
-
-## Session Notes
-
-- GSD methodology followed in Claude web chat + Antigravity/Windsurf (not Claude Code)
-- Claude (this chat) = GSD orchestrator: writes all planning docs, generates PLAN.md files
-- Antigravity/Windsurf = executor: receives PLAN.md, builds the code
+- Reader stage toggle on/off per project
